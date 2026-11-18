@@ -14,15 +14,12 @@
 server is a program which listens for incoming connection requests (SYN packets handle by kernel , server application nerver sees it ) . 
 
 - it follows a sequence before listening :
-  - it first asks creates a socket (internally ,asks the os for a avaliable socket )
+  - first, it  creates a socket (internally ,asks the os for a avaliable socket )
   - ,then binds to a specific port. 
-  - then it goes to listening state . and accepts the incoming requests
-- 
-
-
-- also , server only listen in binded port and cannot send receive data on listening port . 
-- for every connection (or client ) it creates a separate socket and performs data send receive transfers from that (through separate socket ) .
-- go back and accepts another queued  connections (connections which has completed the handshake in kernel )  
+  - then it goes to listening state . and accepts the incoming connection requests
+ - also , server only listen in binded port and cannot send receive data on listening port . 
+- for every connection (or client ) it creates a separate socket for server clinet communication  ( sending / receving data )  .
+- then ,`go back and accepts `another queued  connections (connections which has completed the handshake in kernel )  
 - at a time only one  socket can be binded to a given IP:port (exception SO_REUSEPORT) , 
 - multiple sockets (that are accepted ) can use the same local port without binding . 
 - client sends data on the server port . the kernel de-multiplexer use 4 tuples to identifies that the incoming request is a new connection request or the connection socket already exists
@@ -30,8 +27,8 @@ server is a program which listens for incoming connection requests (SYN packets 
 #### clinet
 client is a program which initiates the connection request . it also follows a procedure before send a request :
 
-- it creates a socket (intenrally internally , it asks the os for a socket is available , ) 
-- performs a DNS lookup (first the host file of the system , configured DNS resolver ) , this step only happens if domin or host name is used instead of ip .
+- it creates a socket (internally , it asks the os for a socket is available , ) 
+- performs a DNS lookup (first the host file of the system , configured DNS resolver ) through c library , this step only happens if domin or hostname is used instead of ip .
 - connect    
   - bind to a ephemeral port (client dont binds , kernel does it internally ) 
   -  performs a TCP 3 way handshake (SYN -> SYN-ACK -> ACK ) ), 
@@ -48,11 +45,11 @@ operations like send , recv , are blocking operations by default
 
 - Socket: a kernel-managed endpoint (fd) identified by protocol + local IP:port (+ remote IP:port once connected).
 
-- What does accept() return? A new connected socket plus the client’s address.
+- What does accept() in python return? A new connected socket plus the client’s address.
 
 - How does the server serve many clients on one port? The kernel demultiplexes by 4-tuple.
 
-- Why is recv() not message-based? TCP is a stream.
+- Why is recv() not message-based? TCP is a byte-stream protocol . and it can be message-based if UDP protocol is used  
 
 - What is TIME_WAIT? The state kept by the active closer, which lets old packets expire and makes sure the final ACK arrives.
 
