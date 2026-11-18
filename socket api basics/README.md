@@ -9,5 +9,53 @@
 - one port can have more than one socket (but 2 socket can't bind() at same port ).
 - one socket can't use multiple ports
 
+### server clinet connection 
+#### server
+server is a program which listens for incoming connection requests (SYN packets handle by kernel , server application nerver sees it ) . 
+
+- it follows a sequence before listening :
+  - it first asks creates a socket (internally ,asks the os for a avaliable socket )
+  - ,then binds to a specific port. 
+  - then it goes to listening state . and accepts the incoming requests
+- 
+
+
+- also , server only listen in binded port and cannot send receive data on listening port . 
+- for every connection (or client ) it creates a separate socket and performs data send receive transfers from that (through separate socket ) .
+- go back and accepts another queued  connections (connections which has completed the handshake in kernel )  
+- at a time only one  socket can be binded to a given IP:port (exception SO_REUSEPORT) , 
+- multiple sockets (that are accepted ) can use the same local port without binding . 
+- client sends data on the server port . the kernel de-multiplexer use 4 tuples to identifies that the incoming request is a new connection request or the connection socket already exists
+
+#### clinet
+client is a program which initiates the connection request . it also follows a procedure before send a request :
+
+- it creates a socket (intenrally internally , it asks the os for a socket is available , ) 
+- performs a DNS lookup (first the host file of the system , configured DNS resolver ) , this step only happens if domin or host name is used instead of ip .
+- connect    
+  - bind to a ephemeral port (client dont binds , kernel does it internally ) 
+  -  performs a TCP 3 way handshake (SYN -> SYN-ACK -> ACK ) ), 
+- after that it starts data send receive . 
+- and at last connection close (client sends FIN Packet , if client is closing  )
+
+we cannot directly use the network devices or kernel modules for communication because the applications runs on user space . so systems like unix /linux and C provides a system -call interface or api called Socket (also a socket is a file descriptor in unix like sys ) to communicate with kernel network stack for communication. and the kernel network stack talks to the network devices .
+operations like send , recv , are blocking operations by default
+
 ### Output
 ![Alt Text](image.png)
+
+### Remember
+
+- Socket: a kernel-managed endpoint (fd) identified by protocol + local IP:port (+ remote IP:port once connected).
+
+- What does accept() return? A new connected socket plus the client’s address.
+
+- How does the server serve many clients on one port? The kernel demultiplexes by 4-tuple.
+
+- Why is recv() not message-based? TCP is a stream.
+
+- What is TIME_WAIT? The state kept by the active closer, which lets old packets expire and makes sure the final ACK arrives.
+
+- bind() vs listen() vs accept(): assign an address; mark the socket passive and start the backlog; take one completed connection.
+
+- Packet vs circuit switching: shared links and independent packets, vs a reserved dedicated path.
